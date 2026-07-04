@@ -14,12 +14,7 @@ __pycache__/
 # Data pipeline cache (10GB+)
 .cache/
 
-# Model artifacts (large binaries — retrain from source)
-models/autogluon/
-models/autogluon_holdout_eval/
-models/autogluon_no_mv/
-models/autogluon_no_mv_no_pos/
-models/autogluon_no_mv_no_age/
+# Model artifacts
 models/*.pkl
 models/plots/
 
