@@ -1,0 +1,57 @@
+# Python
+.venv/
+.venv_ml/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.coverage
+.pytest_cache/
+
+# Data pipeline cache (10GB+)
+.cache/
+
+# Model artifacts (large binaries — retrain from source)
+models/autogluon/
+models/autogluon_holdout_eval/
+models/autogluon_no_mv/
+models/autogluon_no_mv_no_pos/
+models/autogluon_no_mv_no_age/
+models/*.pkl
+models/plots/
+
+# Generated data (rebuild from source)
+data_full_chunks/
+logs/
+logs.log
+
+# Frontend build
+soccer-benchmark/frontend/node_modules/
+soccer-benchmark/frontend/dist/
+
+# Vendored repos (auto-cloned)
+vendor/
+
+# DuckDB (Splink temp)
+*.duckdb
+*.duckdb.wal
+
+# Legacy dlt project
+.dlt/
+soccer_salaries/
+
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+~$*
+
+# Server logs
+server.log
+flaml_run.log
+
+# Firecrawl research (not project code)
+.firecrawl/

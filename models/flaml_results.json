@@ -1,0 +1,19 @@
+{
+  "best_estimator": "xgboost",
+  "rmse": 0.5419617656393272,
+  "mae": 0.410684054123853,
+  "r2": 0.7691472614806094,
+  "best_config": {
+    "n_estimators": 735,
+    "max_leaves": 10,
+    "min_child_weight": 0.47467416756699904,
+    "learning_rate": 0.030297570362309918,
+    "subsample": 0.7416765037171228,
+    "colsample_bylevel": 0.9485826242132914,
+    "colsample_bytree": 0.47587358717421135,
+    "reg_alpha": 0.007103087017148026,
+    "reg_lambda": 1.4637907332789708
+  },
+  "best_loss": 0.5470894972466438,
+  "time_budget": 7200
+}

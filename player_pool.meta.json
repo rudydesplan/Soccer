@@ -1,0 +1,9 @@
+{
+  "input": "data_full.csv",
+  "output": "player_pool.csv",
+  "mode": "pool",
+  "as_of_date": "2026-07-04",
+  "generated_at": "2026-07-04T05:52:51.864782",
+  "rows": 19476,
+  "columns": 35
+}

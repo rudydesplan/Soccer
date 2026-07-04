@@ -1,0 +1,10 @@
+log_annual_fixed_eur =
+  +14.0606  (intercept)
+  +0.7730 × log_market_value_current_eur
+  +0.6684 × age_months
+  +0.0980 × contract_length_months
+  +0.0619 × contract_recency_months
+  -0.0049 × competition_id
+  -0.0022 × main_position
+  +0.0008 × nationality
+  + ...

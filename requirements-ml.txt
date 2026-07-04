@@ -1,0 +1,35 @@
+# ML + API dependencies (model training, inference, backend)
+#
+# NOTE on model families: torch/catboost/tabpfn/tabm ARE installed (below),
+# but all training scripts pass excluded_model_types (see
+# salary_benchmark/calibration.py) so AutoGluon never uses the NN/foundation
+# families. The production ensemble is deliberately LightGBM/XGBoost/sklearn
+# only: tree ensembles dominate on this 3.4k-row tabular dataset, Apple
+# Silicon GPU (MPS) is unsupported by AutoGluon, and keeping one model family
+# across production, calibration, evaluation, and comparison keeps the
+# confidence intervals honest.
+autogluon.tabular==1.5.0
+torch==2.9.1
+catboost==1.2.10
+tabpfn==6.2.0
+tabm==0.0.3
+FLAML==2.6.0
+pycaret==4.0.0a8
+fastapi==0.139.0
+uvicorn==0.49.0
+pydantic==2.13.4
+pandas==2.2.3
+numpy==2.3.5
+scikit-learn==1.7.2
+scipy==1.16.3
+matplotlib==3.10.9
+xgboost==3.3.0
+lightgbm==4.6.0
+shap==0.52.0
+
+# Pipeline deps (also needed at runtime)
+beautifulsoup4==4.15.0
+duckdb==1.5.4
+lxml==6.1.1
+niquests==3.20.0
+splink==4.0.16

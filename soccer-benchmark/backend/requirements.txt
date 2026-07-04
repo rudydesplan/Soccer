@@ -1,0 +1,9 @@
+# Backend API dependencies — pinned to the versions in ../../requirements-ml.txt
+# (the backend imports salary_benchmark, which needs AutoGluon for inference).
+fastapi==0.139.0
+uvicorn[standard]==0.49.0
+pandas==2.2.3
+numpy==2.3.5
+pydantic==2.13.4
+scipy==1.16.3
+autogluon.tabular==1.5.0

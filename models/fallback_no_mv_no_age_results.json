@@ -1,0 +1,101 @@
+{
+  "created_at": "2026-07-04T11:12:24.947684+00:00",
+  "autogluon_version": "1.5.0",
+  "input_file": "data_test.csv",
+  "input_sha256": "20b00c359712c79661d46b2f0e2f8f8e086892f615ded2787a31d4e16352780d",
+  "variant": "no_mv_no_age",
+  "preset": "experimental_quality",
+  "time_limit": 1800,
+  "target": "log_annual_fixed_eur",
+  "features": [
+    "main_position",
+    "nationality",
+    "competition_id",
+    "competition_country",
+    "status",
+    "season_start_year",
+    "contract_length_months",
+    "contract_months_remaining",
+    "contract_recency_months",
+    "has_contract_dates",
+    "has_release_clause",
+    "log_release_clause_eur"
+  ],
+  "excluded_features": [
+    "log_market_value_current_eur",
+    "has_market_value",
+    "age_months"
+  ],
+  "excluded_model_types": [
+    "NN_TORCH",
+    "FASTAI",
+    "CAT",
+    "TABM",
+    "TABDPT",
+    "TABICL",
+    "TABPFNMIX",
+    "REALTABPFN-V2",
+    "REALTABPFN-V2.5",
+    "MITRA"
+  ],
+  "n_salary_rows_total": 3363,
+  "evaluation": {
+    "split": "grouped_holdout",
+    "group_column": "transfermarkt_player_id",
+    "test_size": 0.2,
+    "random_state": 42,
+    "n_train": 2696,
+    "n_test": 667,
+    "best_model": "WeightedEnsemble_L2_FULL",
+    "rmse": 0.8865700729671209,
+    "mae": 0.7029474752520039,
+    "r2": 0.3136413696872433,
+    "mape": 93.41560978311107,
+    "median_ape": 54.00163079470204,
+    "within_20_pct": 19.1904047976012,
+    "within_50_pct": 46.476761619190405
+  },
+  "comparison_vs_full_model": {
+    "rmse": {
+      "full": 0.5387969821501561,
+      "no_mv_no_age": 0.8865700729671209
+    },
+    "mae": {
+      "full": 0.41362437663492124,
+      "no_mv_no_age": 0.7029474752520039
+    },
+    "r2": {
+      "full": 0.7465015701975916,
+      "no_mv_no_age": 0.3136413696872433
+    },
+    "mape": {
+      "full": 46.61661614813964,
+      "no_mv_no_age": 93.41560978311107
+    },
+    "median_ape": {
+      "full": 31.353441780822187,
+      "no_mv_no_age": 54.00163079470204
+    },
+    "within_20_pct": {
+      "full": 32.23388305847077,
+      "no_mv_no_age": 19.1904047976012
+    },
+    "within_50_pct": {
+      "full": 71.06446776611695,
+      "no_mv_no_age": 46.476761619190405
+    }
+  },
+  "production": {
+    "trained_on": "all_salary_rows",
+    "n_train": 3363,
+    "best_model": "WeightedEnsemble_L2_FULL",
+    "model_path": "/Users/rudydesplan/Soccer/models/autogluon_no_mv_no_age"
+  },
+  "calibration": {
+    "path": "/Users/rudydesplan/Soccer/models/calibration_no_mv_no_age.json",
+    "residual_p25": -0.5660907503749026,
+    "residual_p75": 0.5910473423761289,
+    "residual_p10": -1.1550449309397361,
+    "residual_p90": 1.1041232430129175
+  }
+}

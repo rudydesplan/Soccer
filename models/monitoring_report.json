@@ -1,0 +1,67 @@
+{
+  "generated_at": "2026-07-04T07:00:57.032979+00:00",
+  "n_predictions": 500,
+  "time_range": {
+    "first": "2026-07-04T07:00:36.250948+00:00",
+    "last": "2026-07-04T07:00:57.030525+00:00"
+  },
+  "latency": {
+    "mean_ms": 42.6155,
+    "p50_ms": 40.77,
+    "p95_ms": 43.113499999999995,
+    "p99_ms": 45.41769999999999,
+    "max_ms": 868.82
+  },
+  "prediction_distribution": {
+    "mean": 12.746468048832876,
+    "std": 0.8584663387424,
+    "min": 11.176823159915894,
+    "max": 16.315811193344544
+  },
+  "confidence_distribution": {
+    "LOW": {
+      "count": 479,
+      "pct": 95.8
+    },
+    "MEDIUM": {
+      "count": 21,
+      "pct": 4.2
+    }
+  },
+  "status_distribution": {
+    "UNKNOWN": {
+      "count": 402,
+      "pct": 80.4
+    },
+    "OVERPAID": {
+      "count": 11,
+      "pct": 2.2
+    },
+    "FAIRLY_PAID": {
+      "count": 61,
+      "pct": 12.2
+    },
+    "UNDERPAID": {
+      "count": 26,
+      "pct": 5.2
+    }
+  },
+  "drift_detection": {
+    "status": "checked",
+    "n_recent": 500,
+    "n_reference": 250,
+    "n_current": 250,
+    "reference_mean": 12.785973116842046,
+    "reference_std": 0.8910113193763948,
+    "current_mean": 12.70696298082371,
+    "current_std": 0.8227432390812338,
+    "psi": 0.053956845557719194,
+    "psi_alert": false,
+    "ks_test": {
+      "statistic": 0.08,
+      "p_value": 0.4011233148855002,
+      "significant_drift": "False"
+    }
+  },
+  "alerts": []
+}

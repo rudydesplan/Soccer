@@ -1,0 +1,1 @@
+"""Salary Benchmark package."""

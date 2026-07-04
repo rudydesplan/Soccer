@@ -1,0 +1,9 @@
+{
+  "input": "data_full.csv",
+  "output": "data_test.csv",
+  "mode": "model",
+  "as_of_date": "2026-07-04",
+  "generated_at": "2026-07-04T05:52:50.845770",
+  "rows": 19476,
+  "columns": 17
+}

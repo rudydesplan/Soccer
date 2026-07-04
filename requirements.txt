@@ -1,0 +1,7 @@
+# Pipeline dependencies (data acquisition + enrichment)
+beautifulsoup4==4.15.0
+duckdb==1.5.4
+lxml==6.1.1
+niquests==3.20.0
+pandas==2.2.3
+splink==4.0.16

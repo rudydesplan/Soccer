@@ -1,0 +1,13 @@
+feature,importance
+log_market_value_current_eur,0.2341662
+age_months,0.17668843
+has_release_clause,0.13490258
+competition_id,0.12035569
+has_market_value,0.07790767
+contract_length_months,0.0638355
+log_release_clause_eur,0.05984209
+contract_recency_months,0.0345761
+status,0.031447124
+main_position,0.023252793
+competition_country,0.02302589
+nationality,0.019999856

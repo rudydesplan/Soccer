@@ -1,0 +1,33 @@
+{
+  "n_samples": 3363,
+  "n_folds": 5,
+  "method": "grouped_out_of_fold_cv",
+  "group_column": "transfermarkt_player_id",
+  "fold_time_limit": 900,
+  "fold_preset": "experimental_quality",
+  "excluded_model_types": [
+    "NN_TORCH",
+    "FASTAI",
+    "CAT",
+    "TABM",
+    "TABDPT",
+    "TABICL",
+    "TABPFNMIX",
+    "REALTABPFN-V2",
+    "REALTABPFN-V2.5",
+    "MITRA"
+  ],
+  "excluded_features": [
+    "log_market_value_current_eur",
+    "has_market_value",
+    "age_months"
+  ],
+  "residual_p10": -1.1550449309397361,
+  "residual_p25": -0.5660907503749026,
+  "residual_p50": 0.02112259106692349,
+  "residual_p75": 0.5910473423761289,
+  "residual_p90": 1.1041232430129175,
+  "residual_mean": -0.007075270584558061,
+  "residual_std": 0.8888223313750369,
+  "rmse": 0.8888504914803167
+}

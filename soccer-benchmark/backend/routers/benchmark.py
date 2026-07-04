@@ -1,0 +1,72 @@
+"""Benchmark endpoint — runs the salary benchmark for a player."""
+
+from __future__ import annotations
+
+import logging
+import sys
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException
+
+# Ensure salary_benchmark and schemas are importable
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
+from schemas import BenchmarkRequest, BenchmarkResponse
+from salary_benchmark.benchmark import benchmark_by_id, benchmark_by_name, benchmark_player
+
+router = APIRouter(tags=["benchmark"])
+
+logger = logging.getLogger(__name__)
+
+
+@router.post("/benchmark", response_model=BenchmarkResponse)
+def run_benchmark(req: BenchmarkRequest):
+    """Run salary benchmark for a player.
+
+    Prefer player_id for UI calls because player names are not unique. Name
+    lookup is kept for CLI/manual calls.
+    """
+    try:
+        kwargs = {"range_width": req.range_width}
+        if req.full_comparables:
+            kwargs["n_comparables_display"] = None  # all comparables
+        if req.player_id is not None:
+            return benchmark_by_id(req.player_id, **kwargs)
+        if req.player_name:
+            return benchmark_by_name(req.player_name, **kwargs)
+        if req.main_position:
+            if req.age_months is None:
+                # Age is the model's second most important feature — refusing
+                # is more honest than silently assuming a 25-year-old.
+                raise HTTPException(
+                    status_code=400,
+                    detail="age_months is required for manual benchmarks",
+                )
+            import numpy as np
+            mv = req.market_value_current_eur
+            player = {
+                "player_name": "custom_player",
+                "main_position": req.main_position,
+                "competition_id": req.competition_id or "",
+                "competition_country": req.competition_country or "",
+                "age_months": req.age_months,
+                # Market value optional: without it the engine routes to the
+                # no-MV fallback model (if trained).
+                "market_value_current_eur": mv,
+                "log_market_value_current_eur": float(np.log1p(mv)) if mv is not None else None,
+                "has_market_value": 1 if mv is not None else 0,
+                "annual_fixed_eur": req.annual_fixed_eur,
+            }
+            return benchmark_player(player, **kwargs)
+        raise HTTPException(status_code=400, detail="Provide player_name, player_id, or manual fields")
+    except ValueError as e:
+        msg = str(e)
+        if "not found" in msg.lower():
+            raise HTTPException(status_code=404, detail=msg)
+        raise HTTPException(status_code=400, detail=msg)
+    except HTTPException:
+        raise
+    except Exception:
+        # Log the full traceback server-side; never leak internals to clients.
+        logger.exception("Benchmark request failed")
+        raise HTTPException(status_code=500, detail="Internal server error")

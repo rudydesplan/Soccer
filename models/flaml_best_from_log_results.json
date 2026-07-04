@@ -1,0 +1,10 @@
+{
+  "model": "xgboost",
+  "rmse": 0.5557916480122019,
+  "mae": 0.42625522403457095,
+  "r2": 0.757215047981366,
+  "source": "retrain_from_log",
+  "log_record_id": 17,
+  "val_loss_from_log": 0.5471,
+  "note": "RMSE on test set slightly higher than val_loss due to train_full=True retraining on all data"
+}
