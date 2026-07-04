@@ -1,0 +1,71 @@
+# Python environments
+.venv/
+.venv_ml/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Frontend build artifacts and deps
+soccer-benchmark/frontend/node_modules/
+soccer-benchmark/frontend/dist/
+
+# Data pipeline cache (10 GB+)
+.cache/
+data_full_chunks/
+logs/
+
+# Raw / intermediate data — only player_pool.csv is needed at runtime
+data (1).csv
+data_full.csv
+data_test.csv
+data_test.meta.json
+
+# ML model artifacts NOT needed at inference time
+models/autogluon_holdout_eval/
+models/plots/
+models/flaml_model.pkl
+models/flaml_model_best_from_log.pkl
+models/pycaret_best_linear.pkl
+models/pycaret_best_model.pkl
+
+# Training / evaluation scripts (not needed in container)
+train_autogluon_cpu.py
+train_automl_cpu.py
+train_fallback_no_mv.py
+train_pycaret.py
+model_comparison.py
+model_evaluation.py
+build_model_features.py
+patch_capology_nulls.py
+run_enrich.py
+bench.py
+
+# Data pipeline code (not needed at runtime)
+capology_pipeline/
+vendor/
+
+# Tests
+tests/
+conftest.py
+pytest.ini
+.coveragerc
+.coverage
+.pytest_cache/
+
+# Docs
+README.md
+SoccerSolver_TechnicalChallenge_DataEngineer.docx
+soccer-benchmark/frontend/README.md
+
+# Git / OS / editor
+.git/
+.gitignore
+.DS_Store
+*.swp
+*.swo
+
+# Dev / research
+.firecrawl/
+.dlt/
+soccer_salaries/

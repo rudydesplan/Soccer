@@ -1,0 +1,52 @@
+# Cloud Run Service definition for the Soccer Salary Benchmark demo.
+#
+# Do not edit cloudrun-service.yaml directly — it is generated from this template.
+# Deploy with:
+#   ./deploy-cloudrun.sh
+# or copy deploy.cloudrun.env.example → deploy.cloudrun.env, edit values, then:
+#   ./deploy-cloudrun.sh --env-file deploy.cloudrun.env
+#
+# Placeholders (substituted by deploy-cloudrun.sh):
+#   GCP_PROJECT_ID, SERVICE_NAME, CONTAINER_IMAGE
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ${SERVICE_NAME}
+  namespace: ${GCP_PROJECT_ID}
+  labels:
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/startup-cpu-boost: "true"
+    spec:
+      timeoutSeconds: 120
+      containerConcurrency: 20
+      containers:
+        - image: ${CONTAINER_IMAGE}
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8080
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3

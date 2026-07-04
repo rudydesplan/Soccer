@@ -50,3 +50,7 @@ flaml_run.log
 
 # Firecrawl research (not project code)
 .firecrawl/
+
+# Cloud Run deploy (generated / local config)
+cloudrun-service.yaml
+deploy.cloudrun.env
