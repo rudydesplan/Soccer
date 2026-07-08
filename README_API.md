@@ -41,12 +41,30 @@ On **Cloud Run**, access control happens in front of the app via IAM:
 
 ### `GET /api/health`
 
-Liveness/startup check. Returns `200` only after the player pool and all
-model variants are loaded (Cloud Run's startup probe points here).
+Legacy health check — same semantics as `/api/health/ready` with a minimal
+body. Returns `200` only after warm-up succeeded (Cloud Run's startup probe
+points here).
 
 ```bash
 curl http://localhost:8001/api/health
 # {"status": "ok"}
+```
+
+### `GET /api/health/live`
+
+Liveness only: the process is up. Never checks the pool or models.
+
+### `GET /api/health/ready`
+
+Readiness with detail: `200` when the pool is loaded and every trained model
+variant loaded; `503` otherwise. Untrained fallbacks are reported as
+`"not_trained"` and do not block readiness.
+
+```bash
+curl http://localhost:8001/api/health/ready
+# {"status": "ready", "pool_loaded": true,
+#  "models": {"full": "loaded", "no_mv": "loaded",
+#             "no_mv_no_pos": "loaded", "no_mv_no_age": "loaded"}}
 ```
 
 ### `GET /api/players/search?q=<query>&limit=<n>`
@@ -135,6 +153,44 @@ Key response fields:
 | `model_used` | `full`, `no_mv`, `no_mv_no_pos`, or `no_mv_no_age` (fallback routing) |
 | `comparable_players` | Similar players with similarity scores |
 | `benchmark_warning` | Present when results should be read with caution |
+
+### `POST /api/benchmark/explain`
+
+Explain **why** the model predicts this player's salary, using SHAP. Accepts
+the same identification as `/api/benchmark` (`player_id`, `player_name`, or
+manual fields).
+
+```bash
+curl -X POST http://localhost:8001/api/benchmark/explain \
+  -H "Content-Type: application/json" \
+  -d '{"player_id": 1234}'
+```
+
+Response:
+
+```json
+{
+  "player_name": "Erling Haaland",
+  "model_used": "full",
+  "base_salary_eur": 366718,
+  "predicted_salary_eur": 20027641,
+  "features": [
+    {"feature": "log_market_value_current_eur", "label": "Market value",
+     "value": "€200.0M", "shap_log": 2.753, "pct_effect": 1467.1},
+    {"feature": "age_months", "label": "Age",
+     "value": "24.9 years", "shap_log": 0.289, "pct_effect": 33.5}
+  ]
+}
+```
+
+Reading it: `base_salary_eur` is the model's estimate for a *typical* pool
+player; each feature's `pct_effect` is the multiplicative change it applies
+(contributions are additive in log-salary space, so they multiply on the
+salary scale). `predicted_salary_eur` is the raw model estimate — the
+benchmark's calibrated median can differ slightly.
+
+Latency: warm requests take ~0.2s. Explainers are pre-built at startup; if
+that failed, the first request per model variant rebuilds one (~2-3s).
 
 ## Errors
 
