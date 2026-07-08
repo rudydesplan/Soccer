@@ -13,5 +13,6 @@ describe('Navbar', () => {
     expect(screen.getByText('Soccer Salary Benchmark')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: 'Custom Player' })).toHaveAttribute('href', '/manual');
+    expect(screen.getByRole('link', { name: 'About the Model' })).toHaveAttribute('href', '/model');
   });
 });

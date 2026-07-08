@@ -4,6 +4,8 @@ import Home from './pages/Home';
 import Benchmark from './pages/Benchmark';
 import Comparables from './pages/Comparables';
 import ManualBenchmark from './pages/ManualBenchmark';
+import ModelCard from './pages/ModelCard';
+import Report from './pages/Report';
 import './App.css';
 
 function App() {
@@ -14,7 +16,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/manual" element={<ManualBenchmark />} />
+          <Route path="/model" element={<ModelCard />} />
           <Route path="/benchmark/:playerId" element={<Benchmark />} />
+          <Route path="/report/:playerId" element={<Report />} />
           <Route path="/comparables/:playerId" element={<Comparables />} />
         </Routes>
       </div>

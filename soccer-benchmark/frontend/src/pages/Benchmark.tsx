@@ -68,9 +68,17 @@ export default function Benchmark() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <Link to="/" className="text-blue-600 hover:underline text-sm">
-        ← Back to search
-      </Link>
+      <div className="flex justify-between items-center">
+        <Link to="/" className="text-blue-600 hover:underline text-sm">
+          ← Back to search
+        </Link>
+        <Link
+          to={`/report/${result.player_id}`}
+          className="px-4 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-700 transition-colors"
+        >
+          Printable report
+        </Link>
+      </div>
 
       <PlayerCard
         name={result.player_name}

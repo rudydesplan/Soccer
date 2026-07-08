@@ -64,6 +64,59 @@ export interface ExplanationResult {
   features: FeatureContribution[];
 }
 
+export interface ModelCardMetrics {
+  split: string;
+  n_train: number;
+  n_test: number;
+  r2: number;
+  rmse_log: number;
+  mae_log: number;
+  median_ape_pct: number;
+  within_20_pct: number;
+  within_50_pct: number;
+}
+
+export interface ModelCardCalibration {
+  method: string;
+  n_folds: number;
+  n_samples: number;
+  residual_p10: number;
+  residual_p25: number;
+  residual_p50: number;
+  residual_p75: number;
+  residual_p90: number;
+}
+
+export interface ModelCardFeature {
+  feature: string;
+  label: string;
+  importance: number;
+}
+
+export interface ModelCardCoverage {
+  n_rows: number;
+  n_players: number;
+  n_with_salary: number;
+  n_with_market_value: number;
+  countries: string[];
+  n_leagues: number;
+  seasons: number[];
+  n_positions: number;
+}
+
+export interface ModelCard {
+  model_name: string;
+  framework: string;
+  framework_version: string | null;
+  trained_at: string | null;
+  target: string;
+  variants: Record<string, boolean>;
+  metrics: ModelCardMetrics;
+  calibration: ModelCardCalibration;
+  top_features: ModelCardFeature[];
+  coverage: ModelCardCoverage;
+}
+
 export interface CompetitionOption {
   id: string;
   name: string;
@@ -149,6 +202,12 @@ export async function getManualExplanation(input: ManualPlayerInput): Promise<Ex
     body: JSON.stringify(input),
   });
   if (!res.ok) throw await errorFromResponse(res, 'Explanation failed');
+  return res.json();
+}
+
+export async function getModelCard(): Promise<ModelCard> {
+  const res = await fetch('/api/meta/model-card');
+  if (!res.ok) throw await errorFromResponse(res, 'Failed to load model card');
   return res.json();
 }
 

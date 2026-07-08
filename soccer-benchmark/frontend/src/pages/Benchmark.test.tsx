@@ -53,6 +53,10 @@ describe('Benchmark page', () => {
       'href',
       '/comparables/2'
     );
+    expect(screen.getByRole('link', { name: 'Printable report' })).toHaveAttribute(
+      'href',
+      '/report/2'
+    );
     expect(getBenchmarkByIdMock).toHaveBeenCalledWith(2, 'normal');
   });
 

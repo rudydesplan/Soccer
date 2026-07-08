@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function Navbar() {
   return (
-    <nav className="bg-[#1e293b] text-white shadow-lg">
+    <nav className="bg-[#1e293b] text-white shadow-lg print:hidden">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <span className="text-2xl">⚽</span>
@@ -14,6 +14,9 @@ export default function Navbar() {
           </Link>
           <Link to="/manual" className="hover:text-blue-300 transition-colors">
             Custom Player
+          </Link>
+          <Link to="/model" className="hover:text-blue-300 transition-colors">
+            About the Model
           </Link>
         </div>
       </div>
