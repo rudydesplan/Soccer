@@ -9,8 +9,15 @@ import {
   getManualBenchmark,
   getExplanationById,
   getManualExplanation,
+  getModelCard,
 } from './api';
-import { players, benchmarkResult, benchmarkOptions, explanationResult } from '../test/fixtures';
+import {
+  players,
+  benchmarkResult,
+  benchmarkOptions,
+  explanationResult,
+  modelCard,
+} from '../test/fixtures';
 
 function mockFetchOnce(body: unknown, ok = true, status = 200) {
   const res = {
@@ -156,6 +163,21 @@ describe('getManualExplanation', () => {
       (vi.mocked(globalThis.fetch).mock.calls[0][1] as RequestInit).body as string
     );
     expect(body).toEqual({ main_position: 'Centre-Forward', age_months: 300 });
+  });
+});
+
+describe('getModelCard', () => {
+  it('fetches the model card', async () => {
+    mockFetchOnce(modelCard);
+    const card = await getModelCard();
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/meta/model-card');
+    expect(card.framework).toBe('AutoGluon');
+    expect(card.metrics.r2).toBeCloseTo(0.7465);
+  });
+
+  it('throws the API detail on error', async () => {
+    mockFetchOnce({ detail: 'Model artifact autogluon_results.json not found' }, false, 503);
+    await expect(getModelCard()).rejects.toThrow('not found');
   });
 });
 

@@ -129,6 +129,7 @@ class TestOpenAPISchema:
         "/api/players/{player_id}",
         "/api/benchmark",
         "/api/benchmark/explain",
+        "/api/meta/model-card",
     }
 
     @pytest.fixture
@@ -459,3 +460,59 @@ class TestExplainEndpoint:
             response = client.post("/api/benchmark/explain", json={"player_id": 0})
             assert response.status_code == 500
             assert response.json()["detail"] == "Internal server error"
+
+
+class TestModelCardEndpoint:
+    """GET /api/meta/model-card reads real training artifacts from models/."""
+
+    @pytest.fixture
+    def card(self, client):
+        response = client.get("/api/meta/model-card")
+        assert response.status_code == 200
+        return response.json()
+
+    def test_top_level_shape(self, card):
+        assert set(card) >= {
+            "model_name", "framework", "target", "variants",
+            "metrics", "calibration", "top_features", "coverage",
+        }
+        assert card["framework"] == "AutoGluon"
+        assert card["variants"]["full"] is True
+
+    def test_metrics_sane(self, card):
+        m = card["metrics"]
+        assert 0 < m["r2"] <= 1
+        assert m["n_train"] > 0 and m["n_test"] > 0
+        assert 0 < m["median_ape_pct"] < 100
+        assert 0 < m["within_50_pct"] <= 100
+        # Grouped split is a hard requirement — a random split would leak
+        # players between train and test and overstate accuracy.
+        assert "grouped" in m["split"]
+
+    def test_calibration_percentiles_ordered(self, card):
+        cal = card["calibration"]
+        assert cal["residual_p10"] < cal["residual_p25"] < cal["residual_p50"] \
+            < cal["residual_p75"] < cal["residual_p90"]
+        assert cal["n_folds"] >= 2
+        assert cal["n_samples"] > 0
+
+    def test_feature_importance_sorted_and_labeled(self, card):
+        features = card["top_features"]
+        assert len(features) > 0
+        importances = [f["importance"] for f in features]
+        assert importances == sorted(importances, reverse=True)
+        for f in features:
+            assert f["feature"] and f["label"]
+
+    def test_coverage_counts_consistent(self, card):
+        cov = card["coverage"]
+        assert 0 < cov["n_with_salary"] <= cov["n_rows"]
+        assert 0 < cov["n_players"] <= cov["n_rows"]
+        assert len(cov["countries"]) > 0
+        assert cov["n_leagues"] > 0
+        assert len(cov["seasons"]) > 0
+
+    def test_second_call_served_from_cache(self, client):
+        first = client.get("/api/meta/model-card").json()
+        second = client.get("/api/meta/model-card").json()
+        assert first == second

@@ -192,6 +192,23 @@ benchmark's calibrated median can differ slightly.
 Latency: warm requests take ~0.2s. Explainers are pre-built at startup; if
 that failed, the first request per model variant rebuilds one (~2-3s).
 
+### `GET /api/meta/model-card`
+
+Transparency data for the "About the model" page: holdout metrics (grouped
+split — no player in both train and test), range calibration percentiles,
+feature importance, and data coverage. Everything is read from the training
+artifacts in `models/`, so the numbers stay truthful after retraining.
+
+```bash
+curl http://localhost:8001/api/meta/model-card
+```
+
+Returns `model_name`, `framework`, `variants` (which fallbacks are trained),
+`metrics` (`r2`, `median_ape_pct`, `within_50_pct`, …), `calibration`
+(out-of-fold residual percentiles), `top_features`, and `coverage` (pool
+size, countries, leagues, seasons). `503` if artifacts or the pool are
+missing.
+
 ## Errors
 
 All errors return `{"detail": "<message>"}`:

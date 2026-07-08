@@ -103,6 +103,51 @@ export const explanationResult = {
   ],
 };
 
+export const modelCard = {
+  model_name: 'WeightedEnsemble_L2_FULL',
+  framework: 'AutoGluon',
+  framework_version: '1.5.0',
+  trained_at: '2026-07-04T04:13:46.656305+00:00',
+  target: 'log_annual_fixed_eur',
+  variants: { full: true, no_mv: true, no_mv_no_pos: true, no_mv_no_age: true },
+  metrics: {
+    split: 'grouped_holdout',
+    n_train: 2696,
+    n_test: 667,
+    r2: 0.7465,
+    rmse_log: 0.5388,
+    mae_log: 0.4136,
+    median_ape_pct: 31.4,
+    within_20_pct: 32.2,
+    within_50_pct: 71.1,
+  },
+  calibration: {
+    method: 'grouped_out_of_fold_cv',
+    n_folds: 5,
+    n_samples: 3363,
+    residual_p10: -0.6444,
+    residual_p25: -0.3086,
+    residual_p50: 0.0117,
+    residual_p75: 0.3422,
+    residual_p90: 0.6259,
+  },
+  top_features: [
+    { feature: 'log_market_value_current_eur', label: 'Market value', importance: 0.5955 },
+    { feature: 'age_months', label: 'Age', importance: 0.5781 },
+    { feature: 'competition_id', label: 'League', importance: 0.0671 },
+  ],
+  coverage: {
+    n_rows: 19_476,
+    n_players: 18_490,
+    n_with_salary: 3363,
+    n_with_market_value: 18_552,
+    countries: ['England', 'France', 'Germany', 'Italy', 'Spain'],
+    n_leagues: 40,
+    seasons: [2025],
+    n_positions: 16,
+  },
+};
+
 /** Install default API mocks; individual tests can override with page.route(). */
 export async function mockApi(page: Page) {
   await page.route('**/api/players/search**', (route) =>
@@ -116,5 +161,8 @@ export async function mockApi(page: Page) {
   );
   await page.route('**/api/benchmark/explain', (route) =>
     route.fulfill({ json: explanationResult })
+  );
+  await page.route('**/api/meta/model-card', (route) =>
+    route.fulfill({ json: modelCard })
   );
 }
