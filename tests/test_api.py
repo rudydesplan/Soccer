@@ -65,16 +65,70 @@ class TestHealthEndpoint:
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
 
+    def test_live_always_ok(self, client):
+        response = client.get("/api/health/live")
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+
+    def test_ready_when_warmed_up(self, client):
+        response = client.get("/api/health/ready")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ready"
+        assert data["pool_loaded"] is True
+        assert data["models"]["full"] == "loaded"
+        # Every variant is reported, whatever its state
+        assert set(data["models"]) == {"full", "no_mv", "no_mv_no_pos", "no_mv_no_age"}
+        assert all(state in ("loaded", "not_trained") for state in data["models"].values())
+
+    def test_ready_503_when_pool_missing(self, client):
+        import main
+        original = main.WARMUP_STATE["pool_loaded"]
+        main.WARMUP_STATE["pool_loaded"] = False
+        try:
+            response = client.get("/api/health/ready")
+            assert response.status_code == 503
+            assert response.json()["status"] == "not_ready"
+            # Legacy /api/health mirrors readiness
+            assert client.get("/api/health").status_code == 503
+            # Liveness is unaffected
+            assert client.get("/api/health/live").status_code == 200
+        finally:
+            main.WARMUP_STATE["pool_loaded"] = original
+
+    def test_ready_503_when_model_failed(self, client):
+        import main
+        original = main.WARMUP_STATE["models"].get("no_mv")
+        main.WARMUP_STATE["models"]["no_mv"] = "failed"
+        try:
+            response = client.get("/api/health/ready")
+            assert response.status_code == 503
+            assert response.json()["models"]["no_mv"] == "failed"
+        finally:
+            main.WARMUP_STATE["models"]["no_mv"] = original
+
+    def test_untrained_fallback_does_not_block_readiness(self, client):
+        import main
+        original = main.WARMUP_STATE["models"].get("no_mv_no_age")
+        main.WARMUP_STATE["models"]["no_mv_no_age"] = "not_trained"
+        try:
+            assert client.get("/api/health/ready").status_code == 200
+        finally:
+            main.WARMUP_STATE["models"]["no_mv_no_age"] = original
+
 
 class TestOpenAPISchema:
     """The generated OpenAPI spec is part of the API contract — assert its shape."""
 
     EXPECTED_PATHS = {
         "/api/health",
+        "/api/health/live",
+        "/api/health/ready",
         "/api/players/options",
         "/api/players/search",
         "/api/players/{player_id}",
         "/api/benchmark",
+        "/api/benchmark/explain",
     }
 
     @pytest.fixture
@@ -272,3 +326,76 @@ class TestBenchmarkEndpoint:
         with patch("routers.benchmark.benchmark_by_id", side_effect=FileNotFoundError("pool not found")):
             response = client.post("/api/benchmark", json={"player_id": 0})
             assert response.status_code == 500
+
+
+class TestExplainEndpoint:
+    _MOCK_EXPLANATION = {
+        "player_name": "Erling Haaland",
+        "model_used": "full",
+        "base_salary_eur": 366_718,
+        "predicted_salary_eur": 20_027_641,
+        "features": [
+            {
+                "feature": "log_market_value_current_eur",
+                "label": "Market value",
+                "value": "€200.0M",
+                "shap_log": 2.753,
+                "pct_effect": 1467.1,
+            },
+            {
+                "feature": "age_months",
+                "label": "Age",
+                "value": "24.9 years",
+                "shap_log": 0.289,
+                "pct_effect": 33.5,
+            },
+        ],
+    }
+
+    def test_explain_by_id(self, client):
+        with patch("routers.benchmark.explain_by_id", return_value=self._MOCK_EXPLANATION) as mock:
+            response = client.post("/api/benchmark/explain", json={"player_id": 2})
+            assert response.status_code == 200
+            data = response.json()
+            assert data["player_name"] == "Erling Haaland"
+            assert data["features"][0]["label"] == "Market value"
+            mock.assert_called_once_with(2)
+
+    def test_explain_by_name(self, client):
+        with patch("routers.benchmark.explain_by_name", return_value=self._MOCK_EXPLANATION) as mock:
+            response = client.post("/api/benchmark/explain", json={"player_name": "Haaland"})
+            assert response.status_code == 200
+            mock.assert_called_once_with("Haaland")
+
+    def test_explain_manual_player(self, client):
+        with patch("routers.benchmark.explain_player", return_value=self._MOCK_EXPLANATION) as mock:
+            response = client.post("/api/benchmark/explain", json={
+                "main_position": "Centre-Forward",
+                "age_months": 300,
+            })
+            assert response.status_code == 200
+            player = mock.call_args[0][0]
+            assert player["main_position"] == "Centre-Forward"
+            assert player["age_months"] == 300
+
+    def test_explain_manual_without_age_rejected(self, client):
+        response = client.post("/api/benchmark/explain", json={
+            "main_position": "Centre-Forward",
+        })
+        assert response.status_code == 400
+        assert "age_months" in response.json()["detail"]
+
+    def test_explain_not_found(self, client):
+        with patch("routers.benchmark.explain_by_name", side_effect=ValueError("Player 'X' not found")):
+            response = client.post("/api/benchmark/explain", json={"player_name": "Nobody"})
+            assert response.status_code == 404
+
+    def test_explain_empty_request_rejected(self, client):
+        response = client.post("/api/benchmark/explain", json={})
+        assert response.status_code == 422
+
+    def test_explain_unexpected_error_is_500(self, client):
+        with patch("routers.benchmark.explain_by_id", side_effect=RuntimeError("boom")):
+            response = client.post("/api/benchmark/explain", json={"player_id": 0})
+            assert response.status_code == 500
+            assert response.json()["detail"] == "Internal server error"

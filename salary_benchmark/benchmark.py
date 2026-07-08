@@ -58,35 +58,20 @@ def _load_pool() -> pd.DataFrame:
     return _POOL
 
 
-def benchmark_player(player: dict,
-                     range_width: str = "normal",
-                     n_comparables_display: int | None = 10) -> dict:
-    """Run the full salary benchmark for one player.
+def select_model_variant(player: dict) -> str:
+    """Route a player to the model variant its available features support.
 
-    Args:
-        player: dict with player features. At least one of main_position /
-            age_months is required; market_value_current_eur is optional
-            (missing features route to the matching fallback model — see the
-            variant cascade below). Optional: annual_fixed_eur (actual
-            salary for status).
-        range_width: "normal" (p25/p75) or "wide" (p10/p90).
-        n_comparables_display: max comparable players to return (None = all).
+    A cascade of fallback models covers players with missing key features:
+      full          — market value present (position + age required)
+      no_mv         — no market value
+      no_mv_no_pos  — position unknown (market value, if any, unused)
+      no_mv_no_age  — age unknown (market value, if any, unused)
+    Players missing BOTH position and age are refused: too little signal
+    for an estimate anyone should act on.
 
-    Returns:
-        Full benchmark dict with JSON-safe values.
+    Raises ValueError if no variant can serve the player or the required
+    fallback artifact is not trained.
     """
-    player = _clean_record(dict(player))
-    _start_time = time.perf_counter()
-    pool = _load_pool()
-
-    # --- Model variant routing -------------------------------------------
-    # A cascade of fallback models covers players with missing key features:
-    #   full          — market value present (position + age required)
-    #   no_mv         — no market value
-    #   no_mv_no_pos  — position unknown (market value, if any, unused)
-    #   no_mv_no_age  — age unknown (market value, if any, unused)
-    # Players missing BOTH position and age are refused: too little signal
-    # for an estimate anyone should act on.
     provided = set(k for k, v in player.items() if v is not None)
     has_mv = "market_value_current_eur" in provided
     has_pos = "main_position" in provided
@@ -110,6 +95,31 @@ def benchmark_player(player: dict,
             f"'{variant}' fallback model is not available. Train it with: "
             f"python train_fallback_no_mv.py --variant {variant}"
         )
+    return variant
+
+
+def benchmark_player(player: dict,
+                     range_width: str = "normal",
+                     n_comparables_display: int | None = 10) -> dict:
+    """Run the full salary benchmark for one player.
+
+    Args:
+        player: dict with player features. At least one of main_position /
+            age_months is required; market_value_current_eur is optional
+            (missing features route to the matching fallback model — see the
+            variant cascade below). Optional: annual_fixed_eur (actual
+            salary for status).
+        range_width: "normal" (p25/p75) or "wide" (p10/p90).
+        n_comparables_display: max comparable players to return (None = all).
+
+    Returns:
+        Full benchmark dict with JSON-safe values.
+    """
+    player = _clean_record(dict(player))
+    _start_time = time.perf_counter()
+    pool = _load_pool()
+
+    variant = select_model_variant(player)
     log_pred = predict_log_salary(player, variant=variant)
     sal_range = salary_range(log_pred, width=range_width, variant=variant)
     low = sal_range["expected_salary_low_eur"]
@@ -283,11 +293,11 @@ def benchmark_by_id(player_id: int, **kwargs) -> dict:
     return benchmark_player(player, **kwargs)
 
 
-def benchmark_by_name(player_name: str, **kwargs) -> dict:
-    """Look up a player by name in the pool and run benchmark.
+def resolve_player_by_name(player_name: str) -> dict:
+    """Find the best pool match for a player name (exact, then substring).
 
-    The web interface should prefer benchmark_by_id because player names are
-    not unique. This name lookup is kept for CLI convenience.
+    Ambiguous names resolve to the highest market value match. Raises
+    ValueError when nothing matches.
     """
     pool = _load_pool()
     matches = pool[pool["player_name"].str.lower() == player_name.lower()]
@@ -299,5 +309,13 @@ def benchmark_by_name(player_name: str, **kwargs) -> dict:
         raise ValueError(f"Player '{player_name}' not found in player_pool.csv")
     if len(matches) > 1:
         matches = matches.sort_values("market_value_current_eur", ascending=False)
-    player = matches.iloc[0].to_dict()
-    return benchmark_player(player, **kwargs)
+    return matches.iloc[0].to_dict()
+
+
+def benchmark_by_name(player_name: str, **kwargs) -> dict:
+    """Look up a player by name in the pool and run benchmark.
+
+    The web interface should prefer benchmark_by_id because player names are
+    not unique. This name lookup is kept for CLI convenience.
+    """
+    return benchmark_player(resolve_player_by_name(player_name), **kwargs)

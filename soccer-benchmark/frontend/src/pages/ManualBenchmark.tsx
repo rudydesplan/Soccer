@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   getBenchmarkOptions,
   getManualBenchmark,
+  getManualExplanation,
   formatEur,
   type BenchmarkOptions,
   type BenchmarkResult,
@@ -11,6 +12,7 @@ import {
 import SalaryRangeChart from '../components/SalaryRangeChart';
 import ConfidenceBadge from '../components/ConfidenceBadge';
 import ComparablesTable from '../components/ComparablesTable';
+import ExplanationPanel from '../components/ExplanationPanel';
 
 const statusColors: Record<string, string> = {
   OVERPAID: 'text-red-600 bg-red-50 border-red-200',
@@ -285,6 +287,13 @@ export default function ManualBenchmark() {
               status={result.salary_status}
             />
           </div>
+
+          {lastInput && (
+            <ExplanationPanel
+              playerKey={JSON.stringify(lastInput)}
+              fetchExplanation={() => getManualExplanation(lastInput)}
+            />
+          )}
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Top 5 Comparable Players</h3>

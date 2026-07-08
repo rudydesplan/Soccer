@@ -150,8 +150,19 @@ class PlayerPoolRow(ModelFeatureRow):
 # =============================================================================
 
 class HealthResponse(BaseModel):
-    """Response body for GET /api/health."""
+    """Response body for GET /api/health and /api/health/live."""
     status: Literal["ok"] = "ok"
+
+
+class ReadinessResponse(BaseModel):
+    """Response body for GET /api/health/ready.
+
+    Model states: "loaded" (warm), "failed" (artifact present but unloadable),
+    "not_trained" (fallback artifact absent — does not block readiness).
+    """
+    status: Literal["ready", "not_ready"]
+    pool_loaded: bool
+    models: dict[str, Literal["loaded", "failed", "not_trained"]]
 
 
 class ErrorResponse(BaseModel):
@@ -256,6 +267,27 @@ class BenchmarkResponse(BaseModel):
 
     # Comparables
     comparable_players: list[ComparablePlayerResponse] = []
+
+
+class FeatureContribution(BaseModel):
+    """One feature's contribution to a salary prediction (SHAP)."""
+    feature: str = Field(..., description="Model feature name")
+    label: str = Field(..., description="Human-readable feature name")
+    value: str | None = Field(None, description="The player's value for this feature, formatted")
+    shap_log: float = Field(..., description="SHAP contribution in log-salary space (additive)")
+    pct_effect: float = Field(
+        ...,
+        description="Multiplicative effect on the salary estimate in percent (exp(shap_log)-1)*100",
+    )
+
+
+class ExplanationResponse(BaseModel):
+    """Response body for POST /api/benchmark/explain."""
+    player_name: str
+    model_used: Literal["full", "no_mv", "no_mv_no_pos", "no_mv_no_age"]
+    base_salary_eur: int = Field(..., ge=0, description="Baseline: model output for a typical pool player")
+    predicted_salary_eur: int = Field(..., ge=0, description="Model estimate for this player (uncalibrated median)")
+    features: list[FeatureContribution] = Field(..., description="Contributions sorted by |impact|")
 
 
 class CompetitionOption(BaseModel):
