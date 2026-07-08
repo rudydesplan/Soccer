@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException
 # Ensure salary_benchmark and schemas are importable
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from schemas import BenchmarkRequest, BenchmarkResponse
+from schemas import BenchmarkRequest, BenchmarkResponse, ErrorResponse
 from salary_benchmark.benchmark import benchmark_by_id, benchmark_by_name, benchmark_player
 
 router = APIRouter(tags=["benchmark"])
@@ -19,7 +19,18 @@ router = APIRouter(tags=["benchmark"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("/benchmark", response_model=BenchmarkResponse)
+@router.post(
+    "/benchmark",
+    response_model=BenchmarkResponse,
+    responses={
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid request (e.g. manual benchmark without age_months)",
+        },
+        404: {"model": ErrorResponse, "description": "Player not found"},
+        500: {"model": ErrorResponse, "description": "Unexpected server error"},
+    },
+)
 def run_benchmark(req: BenchmarkRequest):
     """Run salary benchmark for a player.
 
