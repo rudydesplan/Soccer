@@ -66,6 +66,66 @@ class TestHealthEndpoint:
         assert response.json() == {"status": "ok"}
 
 
+class TestOpenAPISchema:
+    """The generated OpenAPI spec is part of the API contract — assert its shape."""
+
+    EXPECTED_PATHS = {
+        "/api/health",
+        "/api/players/options",
+        "/api/players/search",
+        "/api/players/{player_id}",
+        "/api/benchmark",
+    }
+
+    @pytest.fixture
+    def spec(self, client):
+        response = client.get("/openapi.json")
+        assert response.status_code == 200
+        return response.json()
+
+    def test_all_endpoints_present(self, spec):
+        assert set(spec["paths"]) == self.EXPECTED_PATHS
+
+    def test_metadata(self, spec):
+        info = spec["info"]
+        assert info["title"] == "Soccer Salary Benchmark API"
+        assert info["version"] == "1.0.0"
+        # The hand-written guide must survive in the description
+        assert "Authentication" in info["description"]
+        assert "Quickstart" in info["description"]
+
+    def test_benchmark_error_responses_documented(self, spec):
+        responses = spec["paths"]["/api/benchmark"]["post"]["responses"]
+        assert {"200", "400", "404", "422", "500"} <= set(responses)
+
+    def test_player_detail_error_responses_documented(self, spec):
+        responses = spec["paths"]["/api/players/{player_id}"]["get"]["responses"]
+        assert {"200", "404", "503"} <= set(responses)
+
+    def test_search_pool_unavailable_documented(self, spec):
+        responses = spec["paths"]["/api/players/search"]["get"]["responses"]
+        assert "503" in responses
+
+    def test_benchmark_request_has_examples(self, spec):
+        schema = spec["components"]["schemas"]["BenchmarkRequest"]
+        examples = schema.get("examples")
+        assert examples, "BenchmarkRequest should expose request examples for Try it out"
+        assert any("player_id" in ex for ex in examples)
+        assert any("main_position" in ex for ex in examples)
+
+    def test_health_has_response_model(self, spec):
+        ref = spec["paths"]["/api/health"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+        assert ref.get("$ref", "").endswith("HealthResponse")
+
+    def test_error_schema_shape(self, spec):
+        error_schema = spec["components"]["schemas"]["ErrorResponse"]
+        assert "detail" in error_schema["properties"]
+
+    def test_docs_pages_served(self, client):
+        assert client.get("/docs").status_code == 200
+        assert client.get("/redoc").status_code == 200
+
+
 class TestPlayersSearch:
     def test_search_found(self, client):
         response = client.get("/api/players/search", params={"q": "messi"})
