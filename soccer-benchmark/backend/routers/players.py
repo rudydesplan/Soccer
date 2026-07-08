@@ -10,8 +10,12 @@ from fastapi import APIRouter, HTTPException, Query
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from schemas import BenchmarkOptions, PlayerSearchResult, PlayerDetail
+from schemas import BenchmarkOptions, ErrorResponse, PlayerSearchResult, PlayerDetail
 from salary_benchmark.benchmark import POOL_PATH, _load_pool as _load_shared_pool
+
+_POOL_UNAVAILABLE = {
+    503: {"model": ErrorResponse, "description": "Player pool not available on the server"},
+}
 
 router = APIRouter(tags=["players"])
 
@@ -46,7 +50,7 @@ def _load_pool() -> pd.DataFrame:
         )
 
 
-@router.get("/players/options", response_model=BenchmarkOptions)
+@router.get("/players/options", response_model=BenchmarkOptions, responses=_POOL_UNAVAILABLE)
 def get_benchmark_options():
     """Distinct positions and competitions for the manual benchmark form."""
     pool = _load_pool()
@@ -77,7 +81,7 @@ def get_benchmark_options():
     }
 
 
-@router.get("/players/search", response_model=list[PlayerSearchResult])
+@router.get("/players/search", response_model=list[PlayerSearchResult], responses=_POOL_UNAVAILABLE)
 def search_players(q: str = Query(..., min_length=2), limit: int = Query(20, ge=1, le=50)):
     """Search players by name (case-insensitive substring match)."""
     pool = _load_pool()
@@ -91,7 +95,14 @@ def search_players(q: str = Query(..., min_length=2), limit: int = Query(20, ge=
     return [_clean_record(row) for row in results[cols].to_dict(orient="records")]
 
 
-@router.get("/players/{player_id}", response_model=PlayerDetail)
+@router.get(
+    "/players/{player_id}",
+    response_model=PlayerDetail,
+    responses={
+        404: {"model": ErrorResponse, "description": "No player with this ID"},
+        **_POOL_UNAVAILABLE,
+    },
+)
 def get_player(player_id: int):
     """Get full player details by ID (row index)."""
     pool = _load_pool()

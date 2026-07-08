@@ -149,6 +149,16 @@ class PlayerPoolRow(ModelFeatureRow):
 # 4. API Contract Schemas
 # =============================================================================
 
+class HealthResponse(BaseModel):
+    """Response body for GET /api/health."""
+    status: Literal["ok"] = "ok"
+
+
+class ErrorResponse(BaseModel):
+    """Standard error body (FastAPI HTTPException shape)."""
+    detail: str = Field(..., description="Human-readable error message")
+
+
 class SalaryStatus(str, Enum):
     OVERPAID = "OVERPAID"
     UNDERPAID = "UNDERPAID"
@@ -176,6 +186,23 @@ class BenchmarkRequest(BaseModel):
     # Options
     range_width: Literal["normal", "wide"] = "normal"
     full_comparables: bool = Field(False, description="Return all comparables instead of top 10")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {"player_id": 1234, "range_width": "normal"},
+                {"player_name": "Erling Haaland", "range_width": "wide"},
+                {
+                    "main_position": "Centre-Forward",
+                    "competition_id": "GB1",
+                    "competition_country": "England",
+                    "age_months": 300,
+                    "market_value_current_eur": 50_000_000,
+                    "annual_fixed_eur": 10_000_000,
+                },
+            ]
+        }
+    )
 
     @model_validator(mode="after")
     def at_least_one_identifier(self):
