@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getBenchmarkById, type BenchmarkResult, formatEur } from '../lib/api';
+import { getBenchmarkById, getExplanationById, type BenchmarkResult, formatEur } from '../lib/api';
 import PlayerCard from '../components/PlayerCard';
 import SalaryRangeChart from '../components/SalaryRangeChart';
 import ConfidenceBadge from '../components/ConfidenceBadge';
 import ComparablesTable from '../components/ComparablesTable';
+import ExplanationPanel from '../components/ExplanationPanel';
 
 export default function Benchmark() {
   const { playerId } = useParams<{ playerId: string }>();
@@ -149,6 +150,12 @@ export default function Benchmark() {
           status={result.salary_status}
         />
       </div>
+
+      {/* Why this estimate? (SHAP) */}
+      <ExplanationPanel
+        playerKey={String(result.player_id)}
+        fetchExplanation={() => getExplanationById(Number(playerId))}
+      />
 
       {/* Top Comparables */}
       <div className="bg-white rounded-lg shadow-md p-6">

@@ -48,6 +48,22 @@ export interface BenchmarkResult {
   comparable_players: ComparablePlayer[];
 }
 
+export interface FeatureContribution {
+  feature: string;
+  label: string;
+  value: string | null;
+  shap_log: number;
+  pct_effect: number;
+}
+
+export interface ExplanationResult {
+  player_name: string;
+  model_used: 'full' | 'no_mv' | 'no_mv_no_pos' | 'no_mv_no_age';
+  base_salary_eur: number;
+  predicted_salary_eur: number;
+  features: FeatureContribution[];
+}
+
 export interface CompetitionOption {
   id: string;
   name: string;
@@ -113,6 +129,26 @@ export async function getManualBenchmark(input: ManualPlayerInput, rangeWidth: '
     body: JSON.stringify({ ...input, range_width: rangeWidth }),
   });
   if (!res.ok) throw await errorFromResponse(res, 'Benchmark failed');
+  return res.json();
+}
+
+export async function getExplanationById(playerId: number): Promise<ExplanationResult> {
+  const res = await fetch('/api/benchmark/explain', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ player_id: playerId }),
+  });
+  if (!res.ok) throw await errorFromResponse(res, 'Explanation failed');
+  return res.json();
+}
+
+export async function getManualExplanation(input: ManualPlayerInput): Promise<ExplanationResult> {
+  const res = await fetch('/api/benchmark/explain', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw await errorFromResponse(res, 'Explanation failed');
   return res.json();
 }
 
