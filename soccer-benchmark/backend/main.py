@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from routers import players, benchmark
+from routers import players, benchmark, meta
 from schemas import HealthResponse, ReadinessResponse
 
 logger = logging.getLogger(__name__)
@@ -166,6 +166,7 @@ app.add_middleware(
 
 app.include_router(players.router, prefix="/api")
 app.include_router(benchmark.router, prefix="/api")
+app.include_router(meta.router, prefix="/api")
 
 
 @app.get(

@@ -290,6 +290,64 @@ class ExplanationResponse(BaseModel):
     features: list[FeatureContribution] = Field(..., description="Contributions sorted by |impact|")
 
 
+class ModelCardMetrics(BaseModel):
+    """Holdout evaluation metrics for the full model (grouped by player)."""
+    split: str = Field(..., description="Evaluation split strategy")
+    n_train: int = Field(..., ge=0)
+    n_test: int = Field(..., ge=0)
+    r2: float = Field(..., description="Variance in log-salary explained (0-1)")
+    rmse_log: float = Field(..., description="RMSE in log-salary space")
+    mae_log: float = Field(..., description="MAE in log-salary space")
+    median_ape_pct: float = Field(..., description="Median absolute percentage error on salary")
+    within_20_pct: float = Field(..., description="% of test predictions within ±20% of actual salary")
+    within_50_pct: float = Field(..., description="% of test predictions within ±50% of actual salary")
+
+
+class ModelCardCalibration(BaseModel):
+    """How the salary range around the point estimate is calibrated."""
+    method: str
+    n_folds: int = Field(..., ge=1)
+    n_samples: int = Field(..., ge=0)
+    residual_p10: float = Field(..., description="10th percentile of out-of-fold residuals (log space)")
+    residual_p25: float
+    residual_p50: float
+    residual_p75: float
+    residual_p90: float = Field(..., description="90th percentile of out-of-fold residuals (log space)")
+
+
+class ModelCardFeature(BaseModel):
+    """One feature's permutation importance for the full model."""
+    feature: str
+    label: str = Field(..., description="Human-readable feature name")
+    importance: float = Field(..., description="Permutation importance (drop in score when shuffled)")
+
+
+class ModelCardCoverage(BaseModel):
+    """What data the player pool and training set cover."""
+    n_rows: int = Field(..., ge=0, description="Rows in the player pool")
+    n_players: int = Field(..., ge=0, description="Distinct players in the pool")
+    n_with_salary: int = Field(..., ge=0, description="Rows with a known salary (training data)")
+    n_with_market_value: int = Field(..., ge=0)
+    countries: list[str]
+    n_leagues: int = Field(..., ge=0)
+    seasons: list[int]
+    n_positions: int = Field(..., ge=0)
+
+
+class ModelCardResponse(BaseModel):
+    """Response body for GET /api/meta/model-card."""
+    model_name: str
+    framework: str
+    framework_version: str | None = None
+    trained_at: str | None = None
+    target: str = Field(..., description="Model target variable")
+    variants: dict[str, bool] = Field(..., description="Model variant -> artifact trained/available")
+    metrics: ModelCardMetrics
+    calibration: ModelCardCalibration
+    top_features: list[ModelCardFeature] = Field(..., description="Sorted by importance, descending")
+    coverage: ModelCardCoverage
+
+
 class CompetitionOption(BaseModel):
     """A competition option for the manual benchmark form."""
     id: str
